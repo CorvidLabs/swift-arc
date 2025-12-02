@@ -37,17 +37,11 @@ let package = Package(
                 .product(name: "Algorand", package: "swift-algorand"),
                 .product(name: "Pinata", package: "swift-pinata"),
                 .product(name: "Crypto", package: "swift-crypto")
-            ],
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency")
             ]
         ),
         .testTarget(
             name: "ARCTests",
-            dependencies: ["ARC"],
-            swiftSettings: [
-                .enableUpcomingFeature("StrictConcurrency")
-            ]
+            dependencies: ["ARC"]
         )
     ]
 )
