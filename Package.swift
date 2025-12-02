@@ -19,8 +19,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(path: "../swift-algorand"),
-        .package(path: "../swift-pinata"),
+        .package(url: "https://github.com/CorvidLabs/swift-algorand.git", from: "0.3.1"),
+        .package(url: "https://github.com/CorvidLabs/swift-pinata.git", from: "0.2.0"),
         .package(
             url: "https://github.com/apple/swift-crypto.git",
             from: "3.0.0"
