@@ -1,4 +1,8 @@
-# swift-arc
+# SwiftARC
+
+![Swift 6.0+](https://img.shields.io/badge/Swift-6.0+-orange.svg)
+![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20macOS%20%7C%20tvOS%20%7C%20watchOS%20%7C%20visionOS%20%7C%20Linux-lightgrey.svg)
+![MIT License](https://img.shields.io/badge/License-MIT-blue.svg)
 
 A Swift package for working with Algorand ARC (Algorand Request for Comments) NFT metadata standards, built with Swift 6 strict concurrency and following modern Swift design patterns.
 
@@ -25,7 +29,7 @@ Add swift-arc to your Package.swift dependencies:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/your-org/swift-arc.git", from: "0.1.0")
+    .package(url: "https://github.com/CorvidLabs/swift-arc.git", from: "0.1.0")
 ]
 ```
 
@@ -207,6 +211,6 @@ MIT License - Copyright (c) 2024 Leif
 
 ## Dependencies
 
-- [swift-algorand](https://github.com/your-org/swift-algorand) - Algorand SDK
-- [swift-pinata](https://github.com/your-org/swift-pinata) - Pinata IPFS client
+- [swift-algorand](https://github.com/CorvidLabs/swift-algorand) - Algorand SDK
+- [swift-pinata](https://github.com/CorvidLabs/swift-pinata) - Pinata IPFS client
 - [swift-crypto](https://github.com/apple/swift-crypto) - Apple's Swift Crypto
