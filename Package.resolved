@@ -1,6 +1,15 @@
 {
-  "originHash" : "a519a2346f3f959f870b18ddca659227b857783da64cf33738e82bfb5a03f6e2",
+  "originHash" : "5d9656fc10bd93bf5389ccd86c0c632d0e27af2061d2da137e81b31c0d3b2599",
   "pins" : [
+    {
+      "identity" : "swift-algorand",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/CorvidLabs/swift-algorand.git",
+      "state" : {
+        "revision" : "3c7c7f2b68dd492e12e1e5c4355ee2f16bc73a71",
+        "version" : "0.3.1"
+      }
+    },
     {
       "identity" : "swift-asn1",
       "kind" : "remoteSourceControl",
@@ -35,6 +44,15 @@
       "state" : {
         "revision" : "b45d1f2ed151d057b54504d653e0da5552844e34",
         "version" : "1.0.0"
+      }
+    },
+    {
+      "identity" : "swift-pinata",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/CorvidLabs/swift-pinata.git",
+      "state" : {
+        "revision" : "d629255b0dd7e78bae2181d1e64050e6d47eb584",
+        "version" : "0.2.0"
       }
     }
   ],

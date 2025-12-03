@@ -2,6 +2,11 @@ import XCTest
 @testable import ARC
 
 final class ARC19Tests: XCTestCase {
+    // Helper to create a valid CID string for testing
+    private var testCIDString: String {
+        CID(version: .v0, codec: .dagPB, hash: Data(repeating: 42, count: 32)).toString()
+    }
+
     // MARK: - Template Creation Tests
 
     func testTemplateCreation() throws {
@@ -101,14 +106,14 @@ final class ARC19Tests: XCTestCase {
 
     func testBuilderWithCIDString() throws {
         let template = try ARC19Builder()
-            .cid("QmTestCID123")
+            .cid(testCIDString)
             .build()
 
         XCTAssertTrue(template.templateUrl.hasPrefix("template-ipfs://"))
     }
 
     func testBuilderWithIPFSUrl() throws {
-        let ipfsUrl = try IPFSUrl(string: "ipfs://QmTestCID123/metadata.json")
+        let ipfsUrl = try IPFSUrl(string: "ipfs://\(testCIDString)/metadata.json")
 
         let template = try ARC19Builder()
             .ipfsUrl(ipfsUrl)
@@ -119,7 +124,7 @@ final class ARC19Tests: XCTestCase {
 
     func testBuilderWithIPFSUrlString() throws {
         let template = try ARC19Builder()
-            .ipfsUrl("ipfs://QmTestCID123")
+            .ipfsUrl("ipfs://\(testCIDString)")
             .build()
 
         XCTAssertTrue(template.templateUrl.hasPrefix("template-ipfs://"))
@@ -127,7 +132,7 @@ final class ARC19Tests: XCTestCase {
 
     func testBuilderDefaultPathTemplate() throws {
         let template = try ARC19Builder()
-            .cid("QmTestCID123")
+            .cid(testCIDString)
             .build()
 
         XCTAssertTrue(template.templateUrl.contains("/{id}"))
@@ -135,7 +140,7 @@ final class ARC19Tests: XCTestCase {
 
     func testBuilderCustomPathTemplate() throws {
         let template = try ARC19Builder()
-            .cid("QmTestCID123")
+            .cid(testCIDString)
             .pathTemplate("/nft/{id}/metadata.json")
             .build()
 
@@ -144,7 +149,7 @@ final class ARC19Tests: XCTestCase {
 
     func testBuilderValidated() throws {
         let template = try ARC19Builder()
-            .cid("QmTestCID123")
+            .cid(testCIDString)
             .validated()
 
         let result = template.validate()

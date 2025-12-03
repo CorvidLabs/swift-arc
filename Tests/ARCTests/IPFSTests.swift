@@ -2,6 +2,11 @@ import XCTest
 @testable import ARC
 
 final class IPFSTests: XCTestCase {
+    // Helper to create a valid CID string for testing
+    private var testCIDString: String {
+        CID(version: .v0, codec: .dagPB, hash: Data(repeating: 42, count: 32)).toString()
+    }
+
     // MARK: - CID Tests
 
     func testCIDv0Creation() {
@@ -71,7 +76,7 @@ final class IPFSTests: XCTestCase {
     }
 
     func testIPFSUrlFromString() throws {
-        let urlString = "ipfs://QmTestCID123/metadata.json"
+        let urlString = "ipfs://\(testCIDString)/metadata.json"
         let url = try IPFSUrl(string: urlString)
 
         XCTAssertEqual(url.scheme, .ipfs)
@@ -79,7 +84,7 @@ final class IPFSTests: XCTestCase {
     }
 
     func testTemplateIPFSUrlFromString() throws {
-        let urlString = "template-ipfs://QmTestCID123/metadata/{id}"
+        let urlString = "template-ipfs://\(testCIDString)/metadata/{id}"
         let url = try IPFSUrl(string: urlString)
 
         XCTAssertEqual(url.scheme, .templateIPFS)
@@ -165,7 +170,7 @@ final class IPFSTests: XCTestCase {
     }
 
     func testIPFSUrlCodable() throws {
-        let url = try IPFSUrl(string: "ipfs://QmTestCID123/test")
+        let url = try IPFSUrl(string: "ipfs://\(testCIDString)/test")
 
         let encoder = JSONEncoder()
         let data = try encoder.encode(url)
@@ -188,7 +193,7 @@ final class IPFSTests: XCTestCase {
     }
 
     func testIPFSUrlLosslessStringConvertible() throws {
-        let urlString = "ipfs://QmTestCID123/test"
+        let urlString = "ipfs://\(testCIDString)/test"
         guard let url = IPFSUrl(urlString) else {
             XCTFail("Failed to create IPFS URL from string")
             return

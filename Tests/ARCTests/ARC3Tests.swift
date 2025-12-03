@@ -2,18 +2,24 @@ import XCTest
 @testable import ARC
 
 final class ARC3Tests: XCTestCase {
+    // Helper to create a valid CID string for testing
+    private var testCIDString: String {
+        CID(version: .v0, codec: .dagPB, hash: Data(repeating: 42, count: 32)).toString()
+    }
+
     // MARK: - Metadata Tests
 
     func testARC3MetadataCreation() {
+        let imageUrl = "ipfs://\(testCIDString)"
         let metadata = ARC3Metadata(
             name: "Test NFT",
             description: "A test NFT",
-            image: "ipfs://QmTest123"
+            image: imageUrl
         )
 
         XCTAssertEqual(metadata.name, "Test NFT")
         XCTAssertEqual(metadata.description, "A test NFT")
-        XCTAssertEqual(metadata.image, "ipfs://QmTest123")
+        XCTAssertEqual(metadata.image, imageUrl)
     }
 
     func testARC3MetadataWithProperties() {
@@ -46,7 +52,7 @@ final class ARC3Tests: XCTestCase {
         let metadata = ARC3Metadata(
             name: "Valid NFT",
             description: "A valid NFT",
-            image: "ipfs://QmTest123",
+            image: "ipfs://\(testCIDString)",
             imageMimeType: "image/png"
         )
 
@@ -88,7 +94,7 @@ final class ARC3Tests: XCTestCase {
     func testValidIPFSURL() {
         let metadata = ARC3Metadata(
             name: "Test",
-            image: "ipfs://QmTest123/image.png"
+            image: "ipfs://\(testCIDString)/image.png"
         )
 
         let result = metadata.validate()
