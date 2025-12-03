@@ -1,6 +1,7 @@
 # SwiftARC
 
-[![CI](https://img.shields.io/github/actions/workflow/status/CorvidLabs/swift-arc/ci.yml?label=CI&branch=main)](https://github.com/CorvidLabs/swift-arc/actions/workflows/ci.yml)
+[![macOS](https://img.shields.io/github/actions/workflow/status/CorvidLabs/swift-arc/macOS.yml?label=macOS&branch=main)](https://github.com/CorvidLabs/swift-arc/actions/workflows/macOS.yml)
+[![Ubuntu](https://img.shields.io/github/actions/workflow/status/CorvidLabs/swift-arc/ubuntu.yml?label=Ubuntu&branch=main)](https://github.com/CorvidLabs/swift-arc/actions/workflows/ubuntu.yml)
 [![License](https://img.shields.io/github/license/CorvidLabs/swift-arc)](https://github.com/CorvidLabs/swift-arc/blob/main/LICENSE)
 [![Version](https://img.shields.io/github/v/release/CorvidLabs/swift-arc)](https://github.com/CorvidLabs/swift-arc/releases)
 
