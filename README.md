@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/github/license/CorvidLabs/swift-arc)](https://github.com/CorvidLabs/swift-arc/blob/main/LICENSE)
 [![Version](https://img.shields.io/github/v/release/CorvidLabs/swift-arc)](https://github.com/CorvidLabs/swift-arc/releases)
 
+> **Pre-1.0 Notice**: This library is under active development. The API may change between minor versions until 1.0.
+
 A Swift package for working with Algorand ARC (Algorand Request for Comments) NFT metadata standards, built with Swift 6 strict concurrency and following modern Swift design patterns.
 
 ## Features
