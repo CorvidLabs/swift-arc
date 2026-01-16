@@ -3,22 +3,121 @@ import Crypto
 
 /// Utilities for working with ARC-19 CID encoding in reserve addresses
 public enum ARC19CID {
-    /// Extract a CID from an Algorand reserve address
-    /// The CID is encoded in the public key part of the address
-    public static func extractCID(from address: String) throws -> CID {
-        // Decode the Algorand address
-        let decoded = try decodeAlgorandAddress(address)
+    /// Parameters parsed from an ARC-19 template placeholder
+    public struct TemplateParams: Sendable, Equatable {
+        public let version: CID.Version
+        public let codec: CID.Codec
+        public let hashAlgorithm: String
 
-        // The first 32 bytes are the public key (which contains the CID)
+        public init(version: CID.Version, codec: CID.Codec, hashAlgorithm: String = "sha2-256") {
+            self.version = version
+            self.codec = codec
+            self.hashAlgorithm = hashAlgorithm
+        }
+
+        /// Default parameters for CIDv0 dag-pb
+        public static let v0DagPB = TemplateParams(version: .v0, codec: .dagPB)
+
+        /// Default parameters for CIDv1 raw
+        public static let v1Raw = TemplateParams(version: .v1, codec: .raw)
+    }
+
+    /// Parse template parameters from an ARC-19 placeholder string
+    /// Format: {ipfscid:<version>:<codec>:reserve:<hash>}
+    /// Examples:
+    ///   - {ipfscid:0:dag-pb:reserve:sha2-256}
+    ///   - {ipfscid:1:raw:reserve:sha2-256}
+    public static func parseTemplateParams(from placeholder: String) throws -> TemplateParams {
+        // Remove braces if present
+        var content = placeholder
+        if content.hasPrefix("{") && content.hasSuffix("}") {
+            content = String(content.dropFirst().dropLast())
+        }
+
+        let parts = content.split(separator: ":")
+        guard parts.count == 5,
+              parts[0] == "ipfscid",
+              parts[3] == "reserve"
+        else {
+            throw ARCError.invalidURL("Invalid ARC-19 template placeholder format: \(placeholder)")
+        }
+
+        // Parse version with strict validation
+        let versionStr = String(parts[1])
+        guard let versionNum = Int(versionStr), versionNum == 0 || versionNum == 1 else {
+            throw ARCError.invalidURL("Unsupported CID version in ARC-19 template: \(versionStr)")
+        }
+        let version: CID.Version = versionNum == 1 ? .v1 : .v0
+
+        // Parse codec using extension
+        let codec = try CID.Codec(templateString: String(parts[2]))
+
+        // Parse and validate hash algorithm (only sha2-256 is currently supported)
+        let hashAlgorithm = String(parts[4])
+        guard hashAlgorithm == "sha2-256" else {
+            throw ARCError.invalidURL("Unsupported hash algorithm in ARC-19 template: \(hashAlgorithm). Only sha2-256 is currently supported.")
+        }
+
+        return TemplateParams(version: version, codec: codec, hashAlgorithm: hashAlgorithm)
+    }
+
+    /// Extract a CID from an Algorand reserve address
+    /// - Parameters:
+    ///   - address: The Algorand reserve address containing the encoded CID
+    ///   - params: Optional template parameters specifying CID version and codec
+    ///   - validateChecksum: Whether to validate the Algorand address checksum (default: false for ARC-19)
+    /// - Returns: The extracted CID
+    public static func extractCID(
+        from address: String,
+        params: TemplateParams = .v0DagPB,
+        validateChecksum: Bool = false
+    ) throws -> CID {
+        // Decode the Algorand address
+        let decoded = try decodeAlgorandAddress(address, validateChecksum: validateChecksum)
+
+        // The first 32 bytes are the public key (which contains the CID hash)
         guard decoded.count >= 32 else {
             throw ARCError.invalidReserveAddress("Address too short")
         }
 
-        let publicKey = decoded.prefix(32)
+        let hash = Data(decoded.prefix(32))
 
-        // For ARC-19, we expect a SHA-256 hash (32 bytes)
-        // This represents a CIDv0 (dag-pb)
-        return CID(version: .v0, codec: .dagPB, hash: Data(publicKey))
+        return CID(version: params.version, codec: params.codec, hash: hash)
+    }
+
+    /// Extract a CID from an Algorand reserve address by parsing the template URL for CID parameters.
+    ///
+    /// This method parses the template URL to extract CID version and codec information from the
+    /// `{ipfscid:...}` placeholder, then uses those parameters to construct the CID from the
+    /// reserve address. Use this when you have a template URL and want automatic parameter extraction.
+    ///
+    /// For explicit control over CID parameters, use `extractCID(from:params:validateChecksum:)` instead.
+    ///
+    /// - Note: If the template URL doesn't contain a valid `{ipfscid:...}` placeholder,
+    ///   this method defaults to CIDv0 with dag-pb codec.
+    ///
+    /// - Parameters:
+    ///   - address: The Algorand reserve address containing the encoded CID hash
+    ///   - templateUrl: The template URL containing the `{ipfscid:version:codec:reserve:hash}` placeholder
+    /// - Returns: The extracted CID with version and codec determined from the template
+    /// - Throws: `ARCError.invalidReserveAddress` if the address cannot be decoded
+    public static func extractCID(from address: String, templateUrl: String) throws -> CID {
+        let params = try parseParamsFromTemplate(templateUrl)
+        return try extractCID(from: address, params: params, validateChecksum: false)
+    }
+
+    /// Parse template parameters from a full template URL
+    private static func parseParamsFromTemplate(_ templateUrl: String) throws -> TemplateParams {
+        // Find the placeholder pattern {ipfscid:...}
+        guard let startRange = templateUrl.range(of: "{ipfscid:"),
+              let endRange = templateUrl.range(of: "}", range: startRange.upperBound..<templateUrl.endIndex)
+        else {
+            // Default to v0 dag-pb if no placeholder found
+            return .v0DagPB
+        }
+
+        let placeholder = String(templateUrl[startRange.lowerBound..<endRange.upperBound])
+        return try parseTemplateParams(from: placeholder)
     }
 
     /// Encode a CID into an Algorand reserve address
@@ -33,7 +132,7 @@ public enum ARC19CID {
 
     // MARK: - Algorand Address Encoding/Decoding
 
-    private static func decodeAlgorandAddress(_ address: String) throws -> Data {
+    private static func decodeAlgorandAddress(_ address: String, validateChecksum: Bool) throws -> Data {
         // Algorand addresses are base32 encoded (without padding)
         // They contain: 32 bytes public key + 4 bytes checksum
 
@@ -60,16 +159,19 @@ public enum ARC19CID {
             throw ARCError.invalidReserveAddress("Invalid address length after decoding")
         }
 
-        // Verify checksum
         let publicKey = result.prefix(32)
-        let checksum = result.suffix(4)
-        let expectedChecksum = computeChecksum(publicKey)
 
-        guard checksum == expectedChecksum else {
-            throw ARCError.invalidReserveAddress("Invalid address checksum")
+        // Optionally verify checksum
+        if validateChecksum {
+            let checksum = result.suffix(4)
+            let expectedChecksum = computeChecksum(publicKey)
+
+            guard checksum == expectedChecksum else {
+                throw ARCError.invalidReserveAddress("Invalid address checksum")
+            }
         }
 
-        return publicKey
+        return Data(publicKey)
     }
 
     private static func encodeAlgorandAddress(_ publicKey: Data) throws -> String {

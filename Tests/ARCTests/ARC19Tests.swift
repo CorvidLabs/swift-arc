@@ -210,6 +210,222 @@ final class ARC19Tests: XCTestCase {
         XCTAssertEqual(extractedCID.hash, originalCID.hash)
     }
 
+    // MARK: - CIDv1 and Template Params Tests
+
+    func testCIDv1RawCodecTemplate() throws {
+        // Create a CIDv1 raw codec
+        let hash = Data(repeating: 99, count: 32)
+        let cid = CID(version: .v1, codec: .raw, hash: hash)
+        let reserveAddress = try ARC19CID.encodeToReserveAddress(cid: cid)
+
+        let template = try ARC19Template(
+            templateUrl: "template-ipfs://{ipfscid:1:raw:reserve:sha2-256}",
+            reserveAddress: reserveAddress
+        )
+
+        XCTAssertEqual(template.templateParams.version, .v1)
+        XCTAssertEqual(template.templateParams.codec, .raw)
+        XCTAssertEqual(template.cid.version, .v1)
+        XCTAssertEqual(template.cid.codec, .raw)
+    }
+
+    func testCIDv1RawCodecResolve() throws {
+        // Create a CIDv1 raw codec
+        let hash = Data(repeating: 99, count: 32)
+        let cid = CID(version: .v1, codec: .raw, hash: hash)
+        let reserveAddress = try ARC19CID.encodeToReserveAddress(cid: cid)
+
+        let template = try ARC19Template(
+            templateUrl: "template-ipfs://{ipfscid:1:raw:reserve:sha2-256}/nft/{id}",
+            reserveAddress: reserveAddress
+        )
+
+        let resolved = try template.resolve(assetID: 42)
+
+        // Should start with ipfs:// and contain the CIDv1 (starts with 'b')
+        XCTAssertTrue(resolved.hasPrefix("ipfs://b"), "Resolved URL should use CIDv1 format")
+        XCTAssertTrue(resolved.contains("/nft/42"), "Resolved URL should contain asset ID")
+    }
+
+    func testExtractCIDFromTemplateUrl() throws {
+        // Create a CID and encode to reserve address
+        let hash = Data(repeating: 55, count: 32)
+        let originalCID = CID(version: .v1, codec: .raw, hash: hash)
+        let reserveAddress = try ARC19CID.encodeToReserveAddress(cid: originalCID)
+
+        // Use the template URL overload
+        let extractedCID = try ARC19CID.extractCID(
+            from: reserveAddress,
+            templateUrl: "template-ipfs://{ipfscid:1:raw:reserve:sha2-256}/metadata/{id}"
+        )
+
+        XCTAssertEqual(extractedCID.version, .v1)
+        XCTAssertEqual(extractedCID.codec, .raw)
+        XCTAssertEqual(extractedCID.hash, hash)
+    }
+
+    func testExtractCIDFromTemplateUrlDefaultsToV0() throws {
+        // Create a CIDv0
+        let hash = Data(repeating: 33, count: 32)
+        let originalCID = CID(version: .v0, codec: .dagPB, hash: hash)
+        let reserveAddress = try ARC19CID.encodeToReserveAddress(cid: originalCID)
+
+        // Use a template URL without a valid placeholder (should default to v0 dag-pb)
+        let extractedCID = try ARC19CID.extractCID(
+            from: reserveAddress,
+            templateUrl: "ipfs://some-url-without-placeholder"
+        )
+
+        XCTAssertEqual(extractedCID.version, .v0)
+        XCTAssertEqual(extractedCID.codec, .dagPB)
+        XCTAssertEqual(extractedCID.hash, hash)
+    }
+
+    func testParseTemplateParamsInvalidHashAlgorithm() throws {
+        XCTAssertThrowsError(
+            try ARC19CID.parseTemplateParams(from: "{ipfscid:1:raw:reserve:sha3-256}")
+        ) { error in
+            if let arcError = error as? ARCError,
+               case .invalidURL(let message) = arcError {
+                XCTAssertTrue(message.contains("Unsupported hash algorithm"))
+                XCTAssertTrue(message.contains("sha2-256"))
+            } else {
+                XCTFail("Expected ARCError.invalidURL for invalid hash algorithm")
+            }
+        }
+    }
+
+    func testParseTemplateParamsExtraPartsRejected() throws {
+        // Extra parts should now be rejected with strict validation
+        XCTAssertThrowsError(
+            try ARC19CID.parseTemplateParams(from: "{ipfscid:1:raw:reserve:sha2-256:extra:parts}")
+        ) { error in
+            if let arcError = error as? ARCError,
+               case .invalidURL(let message) = arcError {
+                XCTAssertTrue(message.contains("Invalid ARC-19 template placeholder format"))
+            } else {
+                XCTFail("Expected ARCError.invalidURL for extra parts")
+            }
+        }
+    }
+
+    func testParseTemplateParamsV0DagPB() throws {
+        let params = try ARC19CID.parseTemplateParams(from: "{ipfscid:0:dag-pb:reserve:sha2-256}")
+
+        XCTAssertEqual(params.version, .v0)
+        XCTAssertEqual(params.codec, .dagPB)
+        XCTAssertEqual(params.hashAlgorithm, "sha2-256")
+    }
+
+    func testParseTemplateParamsV1Raw() throws {
+        let params = try ARC19CID.parseTemplateParams(from: "{ipfscid:1:raw:reserve:sha2-256}")
+
+        XCTAssertEqual(params.version, .v1)
+        XCTAssertEqual(params.codec, .raw)
+        XCTAssertEqual(params.hashAlgorithm, "sha2-256")
+    }
+
+    func testParseTemplateParamsAllCodecs() throws {
+        let codecs: [(String, CID.Codec)] = [
+            ("raw", .raw),
+            ("dag-pb", .dagPB),
+            ("dag-cbor", .dagCBOR),
+            ("dag-json", .dagJSON)
+        ]
+
+        for (str, expected) in codecs {
+            let params = try ARC19CID.parseTemplateParams(from: "{ipfscid:1:\(str):reserve:sha2-256}")
+            XCTAssertEqual(params.codec, expected, "Codec \(str) should parse to \(expected)")
+        }
+    }
+
+    func testParseTemplateParamsInvalidVersion() throws {
+        XCTAssertThrowsError(
+            try ARC19CID.parseTemplateParams(from: "{ipfscid:5:raw:reserve:sha2-256}")
+        ) { error in
+            if let arcError = error as? ARCError,
+               case .invalidURL(let message) = arcError {
+                XCTAssertTrue(message.contains("Unsupported CID version"))
+            } else {
+                XCTFail("Expected ARCError.invalidURL for invalid version")
+            }
+        }
+    }
+
+    func testParseTemplateParamsInvalidCodec() throws {
+        XCTAssertThrowsError(
+            try ARC19CID.parseTemplateParams(from: "{ipfscid:1:invalid-codec:reserve:sha2-256}")
+        ) { error in
+            if let arcError = error as? ARCError,
+               case .invalidURL(let message) = arcError {
+                XCTAssertTrue(message.contains("Unsupported codec"))
+            } else {
+                XCTFail("Expected ARCError.invalidURL for invalid codec")
+            }
+        }
+    }
+
+    func testExtractCIDWithValidateChecksumEnabled() throws {
+        // Create a valid address with correct checksum
+        let hash = Data(repeating: 42, count: 32)
+        let cid = CID(version: .v0, codec: .dagPB, hash: hash)
+        let validAddress = try ARC19CID.encodeToReserveAddress(cid: cid)
+
+        // Should succeed with checksum validation enabled (valid address)
+        let extracted = try ARC19CID.extractCID(from: validAddress, validateChecksum: true)
+        XCTAssertEqual(extracted.hash, hash)
+    }
+
+    func testExtractCIDWithValidateChecksumDisabled() throws {
+        // Create a valid address
+        let hash = Data(repeating: 42, count: 32)
+        let cid = CID(version: .v0, codec: .dagPB, hash: hash)
+        let validAddress = try ARC19CID.encodeToReserveAddress(cid: cid)
+
+        // Should succeed with checksum validation disabled
+        let extracted = try ARC19CID.extractCID(from: validAddress, validateChecksum: false)
+        XCTAssertEqual(extracted.hash, hash)
+    }
+
+    func testExtractCIDv1FromReserveAddress() throws {
+        let hash = Data(repeating: 77, count: 32)
+        let originalCID = CID(version: .v1, codec: .raw, hash: hash)
+        let reserveAddress = try ARC19CID.encodeToReserveAddress(cid: originalCID)
+
+        let extractedCID = try ARC19CID.extractCID(
+            from: reserveAddress,
+            params: .v1Raw
+        )
+
+        XCTAssertEqual(extractedCID.version, .v1)
+        XCTAssertEqual(extractedCID.codec, .raw)
+        XCTAssertEqual(extractedCID.hash, hash)
+    }
+
+    func testCodecTemplateStringRoundTrip() throws {
+        let codecs: [CID.Codec] = [.raw, .dagPB, .dagCBOR, .dagJSON]
+
+        for codec in codecs {
+            let str = codec.templateString
+            let parsed = try CID.Codec(templateString: str)
+            XCTAssertEqual(parsed, codec, "Codec \(codec) should round-trip through templateString")
+        }
+    }
+
+    func testCodecTemplateStringValues() {
+        XCTAssertEqual(CID.Codec.raw.templateString, "raw")
+        XCTAssertEqual(CID.Codec.dagPB.templateString, "dag-pb")
+        XCTAssertEqual(CID.Codec.dagCBOR.templateString, "dag-cbor")
+        XCTAssertEqual(CID.Codec.dagJSON.templateString, "dag-json")
+    }
+
+    func testTemplateParamsPresets() {
+        XCTAssertEqual(ARC19CID.TemplateParams.v0DagPB.version, .v0)
+        XCTAssertEqual(ARC19CID.TemplateParams.v0DagPB.codec, .dagPB)
+        XCTAssertEqual(ARC19CID.TemplateParams.v1Raw.version, .v1)
+        XCTAssertEqual(ARC19CID.TemplateParams.v1Raw.codec, .raw)
+    }
+
     // MARK: - JSON Encoding/Decoding Tests
 
     func testJSONEncoding() throws {
