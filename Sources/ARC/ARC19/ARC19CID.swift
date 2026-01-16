@@ -42,25 +42,15 @@ public enum ARC19CID {
             throw ARCError.invalidURL("Invalid ARC-19 template placeholder format: \(placeholder)")
         }
 
-        // Parse version
-        let versionNum = Int(parts[1]) ?? 0
+        // Parse version with strict validation
+        let versionStr = String(parts[1])
+        guard let versionNum = Int(versionStr), versionNum == 0 || versionNum == 1 else {
+            throw ARCError.invalidURL("Unsupported CID version in ARC-19 template: \(versionStr)")
+        }
         let version: CID.Version = versionNum == 1 ? .v1 : .v0
 
-        // Parse codec
-        let codecStr = String(parts[2])
-        let codec: CID.Codec
-        switch codecStr {
-        case "raw":
-            codec = .raw
-        case "dag-pb":
-            codec = .dagPB
-        case "dag-cbor":
-            codec = .dagCBOR
-        case "dag-json":
-            codec = .dagJSON
-        default:
-            throw ARCError.invalidURL("Unsupported codec in ARC-19 template: \(codecStr)")
-        }
+        // Parse codec using extension
+        let codec = try CID.Codec(templateString: String(parts[2]))
 
         // Parse hash algorithm
         let hashAlgorithm = String(parts[4])
@@ -112,7 +102,7 @@ public enum ARC19CID {
             return .v0DagPB
         }
 
-        let placeholder = String(templateUrl[startRange.lowerBound...endRange.lowerBound])
+        let placeholder = String(templateUrl[startRange.lowerBound..<endRange.upperBound])
         return try parseTemplateParams(from: placeholder)
     }
 

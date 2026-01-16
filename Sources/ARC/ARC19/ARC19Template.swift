@@ -36,15 +36,7 @@ public struct ARC19Template: ARCMetadata, Equatable {
         cidVersion: CID.Version = .v0,
         codec: CID.Codec = .dagPB
     ) throws {
-        let codecString: String
-        switch codec {
-        case .raw: codecString = "raw"
-        case .dagPB: codecString = "dag-pb"
-        case .dagCBOR: codecString = "dag-cbor"
-        case .dagJSON: codecString = "dag-json"
-        }
-
-        let templateUrl = "template-ipfs://{ipfscid:\(cidVersion.rawValue):\(codecString):reserve:sha2-256}\(pathTemplate)"
+        let templateUrl = "template-ipfs://{ipfscid:\(cidVersion.rawValue):\(codec.templateString):reserve:sha2-256}\(pathTemplate)"
         try self.init(templateUrl: templateUrl, reserveAddress: reserveAddress)
     }
 
@@ -56,7 +48,7 @@ public struct ARC19Template: ARCMetadata, Equatable {
             throw ARCError.invalidURL("Template URL must contain {ipfscid:...} placeholder")
         }
 
-        return String(templateUrl[startRange.lowerBound...endRange.lowerBound])
+        return String(templateUrl[startRange.lowerBound..<endRange.upperBound])
     }
 
     /// Resolve the template for a specific asset ID
@@ -65,15 +57,7 @@ public struct ARC19Template: ARCMetadata, Equatable {
         var resolved = templateUrl
 
         // Build the placeholder pattern based on template params
-        let codecString: String
-        switch templateParams.codec {
-        case .raw: codecString = "raw"
-        case .dagPB: codecString = "dag-pb"
-        case .dagCBOR: codecString = "dag-cbor"
-        case .dagJSON: codecString = "dag-json"
-        }
-
-        let placeholder = "{ipfscid:\(templateParams.version.rawValue):\(codecString):reserve:\(templateParams.hashAlgorithm)}"
+        let placeholder = "{ipfscid:\(templateParams.version.rawValue):\(templateParams.codec.templateString):reserve:\(templateParams.hashAlgorithm)}"
 
         // Replace the template-ipfs:// scheme and placeholder with ipfs:// and CID
         resolved = resolved.replacingOccurrences(of: "template-ipfs://\(placeholder)", with: "ipfs://\(cidString)")

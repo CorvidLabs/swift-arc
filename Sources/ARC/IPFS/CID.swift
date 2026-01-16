@@ -258,6 +258,32 @@ private enum Base58 {
     }
 }
 
+// MARK: - Codec String Conversion
+
+extension CID.Codec {
+    /// The string representation used in ARC-19 template URLs
+    public var templateString: String {
+        switch self {
+        case .raw: return "raw"
+        case .dagPB: return "dag-pb"
+        case .dagCBOR: return "dag-cbor"
+        case .dagJSON: return "dag-json"
+        }
+    }
+
+    /// Initialize from an ARC-19 template string
+    public init(templateString: String) throws {
+        switch templateString {
+        case "raw": self = .raw
+        case "dag-pb": self = .dagPB
+        case "dag-cbor": self = .dagCBOR
+        case "dag-json": self = .dagJSON
+        default:
+            throw ARCError.invalidURL("Unsupported codec in ARC-19 template: \(templateString)")
+        }
+    }
+}
+
 // MARK: - Base32 Encoder/Decoder (RFC 4648 lowercase)
 
 private enum Base32 {
