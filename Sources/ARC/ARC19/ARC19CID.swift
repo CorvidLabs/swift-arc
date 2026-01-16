@@ -35,7 +35,7 @@ public enum ARC19CID {
         }
 
         let parts = content.split(separator: ":")
-        guard parts.count >= 5,
+        guard parts.count == 5,
               parts[0] == "ipfscid",
               parts[3] == "reserve"
         else {
@@ -52,8 +52,11 @@ public enum ARC19CID {
         // Parse codec using extension
         let codec = try CID.Codec(templateString: String(parts[2]))
 
-        // Parse hash algorithm
+        // Parse and validate hash algorithm (only sha2-256 is currently supported)
         let hashAlgorithm = String(parts[4])
+        guard hashAlgorithm == "sha2-256" else {
+            throw ARCError.invalidURL("Unsupported hash algorithm in ARC-19 template: \(hashAlgorithm). Only sha2-256 is currently supported.")
+        }
 
         return TemplateParams(version: version, codec: codec, hashAlgorithm: hashAlgorithm)
     }
@@ -82,11 +85,22 @@ public enum ARC19CID {
         return CID(version: params.version, codec: params.codec, hash: hash)
     }
 
-    /// Extract a CID from an Algorand reserve address using template URL to determine parameters
+    /// Extract a CID from an Algorand reserve address by parsing the template URL for CID parameters.
+    ///
+    /// This method parses the template URL to extract CID version and codec information from the
+    /// `{ipfscid:...}` placeholder, then uses those parameters to construct the CID from the
+    /// reserve address. Use this when you have a template URL and want automatic parameter extraction.
+    ///
+    /// For explicit control over CID parameters, use `extractCID(from:params:validateChecksum:)` instead.
+    ///
+    /// - Note: If the template URL doesn't contain a valid `{ipfscid:...}` placeholder,
+    ///   this method defaults to CIDv0 with dag-pb codec.
+    ///
     /// - Parameters:
-    ///   - address: The Algorand reserve address containing the encoded CID
-    ///   - templateUrl: The template URL containing the placeholder with version/codec info
-    /// - Returns: The extracted CID
+    ///   - address: The Algorand reserve address containing the encoded CID hash
+    ///   - templateUrl: The template URL containing the `{ipfscid:version:codec:reserve:hash}` placeholder
+    /// - Returns: The extracted CID with version and codec determined from the template
+    /// - Throws: `ARCError.invalidReserveAddress` if the address cannot be decoded
     public static func extractCID(from address: String, templateUrl: String) throws -> CID {
         let params = try parseParamsFromTemplate(templateUrl)
         return try extractCID(from: address, params: params, validateChecksum: false)
