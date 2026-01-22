@@ -14,6 +14,7 @@ public struct ARC19Template: ARCMetadata, Equatable {
     /// The parsed template parameters
     public let templateParams: ARC19CID.TemplateParams
 
+    /// Create from a template URL and reserve address
     public init(templateUrl: String, reserveAddress: String) throws {
         self.templateUrl = templateUrl
         self.reserveAddress = reserveAddress
@@ -51,7 +52,8 @@ public struct ARC19Template: ARCMetadata, Equatable {
         return String(templateUrl[startRange.lowerBound..<endRange.upperBound])
     }
 
-    /// Resolve the template for a specific asset ID
+    /// Resolve the template for a specific asset ID in a collection
+    /// Used when assets are stored under a common CID with different paths
     public func resolve(assetID: UInt64) throws -> String {
         let cidString = cid.toString()
         var resolved = templateUrl
@@ -119,6 +121,7 @@ extension ARC19Template: Codable {
         case reserveAddress = "reserve_address"
     }
 
+    // Custom decoding to validate during initialization
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let templateUrl = try container.decode(String.self, forKey: .templateUrl)
