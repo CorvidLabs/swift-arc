@@ -1,0 +1,11 @@
+[tasks.build]
+cmd = "swift build"
+description = "Build the Swift package"
+
+[tasks.test]
+cmd = "swift test"
+description = "Run the Swift package tests"
+
+[lanes.verify]
+description = "Build and test swift-arc"
+steps = ["build", "test"]
