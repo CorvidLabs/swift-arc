@@ -5,10 +5,10 @@
   "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for swift-arc",
   "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for swift-arc",
   "kind": "migration",
-  "state": "draft",
+  "state": "accepted",
   "base_commit": "071b92e09ddb6b25848343a29ba3d1c9b291da7c",
   "created_at": 1783885109,
-  "updated_at": 1783885116,
+  "updated_at": 1783997258,
   "affected_specs": [],
   "affected_paths": [
     "Sources/",

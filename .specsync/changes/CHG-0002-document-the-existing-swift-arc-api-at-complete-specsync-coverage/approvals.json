@@ -1,0 +1,18 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "user:0xLeif",
+      "timestamp": 1783997110,
+      "digest": "784ed7c9f02fa23d68bf2f604ca94ddd8f2b635a3742918ec51ce69434bc4af0",
+      "note": "Approved source-backed canonical companion definition"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "user:0xLeif",
+      "timestamp": 1783997232,
+      "digest": "d9d02fc9e6a7a3d2851f766ca0ef6ccfd434d5c18722fbe7b36b3f9571835301",
+      "note": "Native verification passed for all twelve requirements and complete parser coverage"
+    }
+  ]
+}

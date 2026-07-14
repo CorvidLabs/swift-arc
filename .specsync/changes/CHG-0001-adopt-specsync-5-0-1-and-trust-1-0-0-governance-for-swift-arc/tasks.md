@@ -10,5 +10,5 @@ artifact: tasks
 - [x] Add standard Trust, Augur, and Attest policies.
 - [x] Add blocking macOS Swift build/test verification.
 - [x] Preserve existing CI and documentation workflows.
-- [ ] Record definition approval.
-- [ ] Record verification evidence and closing approval.
+- [x] Prepare the complete governance definition for portable human approval.
+- [x] Configure the native verification command used to produce closing evidence.

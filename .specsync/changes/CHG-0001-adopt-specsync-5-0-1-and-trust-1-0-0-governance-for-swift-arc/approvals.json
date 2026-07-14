@@ -1,3 +1,18 @@
 {
-  "approvals": []
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "user:0xLeif",
+      "timestamp": 1783997110,
+      "digest": "292078b83ee915acd4aba867986c6efa5d0d0c7e18229e4ea0e3cba109194224",
+      "note": "Approved organization governance migration definition"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "user:0xLeif",
+      "timestamp": 1783997258,
+      "digest": "fdc2fad5086ac7c381ceedcbbe7f2d9526d4059e7a00584ca2f890f0496be7f5",
+      "note": "Native Fledge verification passed after canonical companion delivery; closing approval recorded"
+    }
+  ]
 }
