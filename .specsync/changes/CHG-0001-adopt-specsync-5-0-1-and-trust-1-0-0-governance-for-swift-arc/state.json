@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0001-adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-swift-arc",
+  "slug": "adopt-specsync-5-0-1-and-trust-1-0-0-governance-for-swift-arc",
+  "title": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for swift-arc",
+  "description": "Adopt SpecSync 5.0.1 and Trust 1.0.0 governance for swift-arc",
+  "kind": "migration",
+  "state": "accepted",
+  "base_commit": "071b92e09ddb6b25848343a29ba3d1c9b291da7c",
+  "created_at": 1783885109,
+  "updated_at": 1783997258,
+  "affected_specs": [],
+  "affected_paths": [
+    "Sources/",
+    "Tests/",
+    "Package.swift",
+    "Package.resolved",
+    "fledge.toml",
+    ".github/",
+    ".specsync/",
+    ".trust.toml",
+    ".augur.toml",
+    ".attest.json",
+    "AGENTS.md"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This migration changes repository governance only and does not alter the existing Swift package API or behavior",
+  "acceptance_criteria": [
+    "SpecSync strict lifecycle passes at advisory threshold 0; all four agents are installed; Trust doctor and macOS Swift build and tests pass; existing Ubuntu macOS and documentation workflows remain unchanged; immutable Trust runs on every pull request"
+  ],
+  "selected_artifacts": [
+    "context",
+    "research",
+    "design",
+    "plan",
+    "tasks",
+    "testing",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}
